@@ -1,17 +1,26 @@
-"""Device Management Service"""
+import logging
+from typing import List
+
+from pydantic import SecretStr
 from sqlalchemy.orm import Session
-from typing import List, Optional
+
+from app.core.exceptions import ResourceNotFoundError, ValidationError
 from app.models import Device
 from app.schemas.device import DeviceCreate, DeviceUpdate
-from app.core.exceptions import ResourceNotFoundError, ValidationError
 from app.services.ssh import ssh_service
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class DeviceService:
     """Device Management Service"""
+
+    @staticmethod
+    def _secret_to_string(value: SecretStr | str | None) -> str | None:
+        """Convert write-only secret fields before persistence."""
+        if isinstance(value, SecretStr):
+            return value.get_secret_value()
+        return value
     
     @staticmethod
     def create_device(db: Session, device: DeviceCreate) -> Device:
@@ -29,7 +38,7 @@ class DeviceService:
             device_type=device.device_type,
             os_type=device.os_type,
             username=device.username,
-            password=device.password,
+            password=DeviceService._secret_to_string(device.password),
             ssh_port=device.ssh_port,
             site=device.site,
             location=device.location,
@@ -63,8 +72,10 @@ class DeviceService:
         """Update device"""
         device = DeviceService.get_device(db, device_id)
         
-        update_data = device_update.dict(exclude_unset=True)
+        update_data = device_update.model_dump(exclude_unset=True)
         for key, value in update_data.items():
+            if key == "password":
+                value = DeviceService._secret_to_string(value)
             setattr(device, key, value)
         
         db.add(device)

@@ -1,8 +1,9 @@
 """Report Schemas"""
-from pydantic import BaseModel, Field
-from typing import Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class ReportFormat(str, Enum):
@@ -42,8 +43,8 @@ class ReportResponse(BaseModel):
     passed_count: int
     failed_count: int
     success_rate: str
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -51,7 +52,7 @@ class ReportResponse(BaseModel):
 
 class ReportListResponse(BaseModel):
     total: int
-    reports: list
+    reports: List[ReportResponse]
 
 
 class ReportExportRequest(BaseModel):

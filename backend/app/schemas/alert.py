@@ -1,8 +1,9 @@
 """Alert Schemas"""
-from pydantic import BaseModel, Field
-from typing import Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class AlertSeverity(str, Enum):
@@ -28,8 +29,8 @@ class AlertResponse(BaseModel):
     acknowledged_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
     is_notified: bool
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -42,7 +43,7 @@ class AlertUpdateRequest(BaseModel):
 
 class AlertListResponse(BaseModel):
     total: int
-    alerts: list
+    alerts: List[AlertResponse]
     critical_count: int
     warning_count: int
     info_count: int

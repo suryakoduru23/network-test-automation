@@ -1,8 +1,9 @@
 """Test Schemas"""
-from pydantic import BaseModel, Field
-from typing import Optional, List, Any
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class TestType(str, Enum):
@@ -42,8 +43,8 @@ class TestCaseCreate(TestCaseBase):
 class TestCaseResponse(TestCaseBase):
     id: int
     is_active: bool
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -62,8 +63,8 @@ class TestRunResponse(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     duration_seconds: Optional[int] = None
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -83,7 +84,7 @@ class TestResultResponse(BaseModel):
 
 
 class TestRunDetailResponse(TestRunResponse):
-    results: List[TestResultResponse] = []
+    results: List[TestResultResponse] = Field(default_factory=list)
 
 
 class BulkTestRunRequest(BaseModel):
