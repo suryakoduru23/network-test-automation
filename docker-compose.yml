@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - PYTHON_ENV=production
+      - DATABASE_URL=postgresql://ntaf:ntaf@postgres:5432/ntaf_db
+      - SECRET_KEY=your-secret-key-change-in-production
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+    networks:
+      - ntaf-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - ntaf-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=ntaf
+      - POSTGRES_PASSWORD=ntaf
+      - POSTGRES_DB=ntaf_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ntaf-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - ntaf-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ntaf-network:
+    driver: bridge

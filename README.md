@@ -1,286 +1,389 @@
 # Network Test Automation Framework
 
-A production-grade network validation and testing platform for automated network device testing, monitoring, and reporting. Built following industry best practices used at Google, Cisco, Arista, Juniper, and Meta.
+## Overview
 
-## 🎯 Overview
+The **Network Test Automation Framework (NTAF)** is a comprehensive solution for automating network device testing, validation, and reporting. It provides:
 
-Network Test Automation Framework is a comprehensive solution for:
-- **Device Inventory Management**: Centralized network device repository
-- **SSH Automation**: Secure device connectivity and command execution
-- **Automated Testing**: Multi-layer network validation
-- **Failure Simulation**: Detect and report network anomalies
-- **Smart Reporting**: HTML, PDF, and CSV exports
-- **Real-time Dashboard**: Network health visualization
-- **Intelligent Monitoring**: Periodic validation jobs and alerts
+- **SSH-based network automation** - Execute commands on network devices
+- **Comprehensive test validators** - Interface, routing, DNS, DHCP, ARP, VLAN, BGP, OSPF, and reachability tests
+- **Test execution engine** - Run individual or bulk tests with real-time monitoring
+- **Report generation** - Export results in HTML, PDF, or CSV formats
+- **Alert management** - Monitor and manage network alerts with severity levels
+- **Role-based access control** - Admin, Engineer, and Viewer roles
+- **User-friendly dashboard** - Modern React-based web interface
+- **RESTful API** - Fully documented API for integration
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│           React Frontend (TypeScript)               │
-│    Dashboard • Devices • Tests • Reports • Alerts   │
-└──────────────────┬──────────────────────────────────┘
-                   │ REST API + WebSocket
-┌──────────────────▼──────────────────────────────────┐
-│            FastAPI Backend (Python 3.12)            │
-│  Device Mgmt • SSH Automation • Test Engine • Jobs  │
-├──────────────────────────────────────────────────────┤
-│  Core Modules:                                       │
-│  ├─ Device Management (Inventory)                   │
-│  ├─ SSH Connection Pool (Netmiko, Paramiko)        │
-│  ├─ Test Execution Engine (Pytest Integration)     │
-│  ├─ Report Generator (HTML, PDF, CSV)              │
-│  ├─ Job Scheduler (APScheduler)                     │
-│  └─ Alert System (Email, Webhooks)                 │
-└──────────────────┬──────────────────────────────────┘
-                   │ SQL ORM (SQLAlchemy)
-┌──────────────────▼──────────────────────────────────┐
-│      Database (SQLite/PostgreSQL)                   │
-│  Users • Devices • Tests • Runs • Reports • Alerts  │
-└──────────────────────────────────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────────────┐
-│      Network Devices (SSH/Telnet)                   │
-│  Cisco IOS • Juniper JunOS • Arista EOS • etc.     │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Frontend (React)                      │
+│              (Dashboard, Devices, Tests)                │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     │ HTTP/REST
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Backend (FastAPI)                       │
+│        ┌──────────────────────────────────────┐        │
+│        │      API Routes & Endpoints           │        │
+│        ├──────────────────────────────────────┤        │
+│        │  Services Layer                       │        │
+│        │  - Auth, Device, Test, Report        │        │
+│        ├──────────────────────────────────────┤        │
+│        │  Core Modules                         │        │
+│        │  - SSH, Validators, Security         │        │
+│        └──────────────────────────────────────┘        │
+└────────────────────┬────────────────────────────────────┘
+                     │
+      ┌──────────────┼──────────────┐
+      │              │              │
+      ▼              ▼              ▼
+   Database       SSH Tunnel    File Storage
+  (PostgreSQL)   (Netmiko)      (Reports)
 ```
 
-## ✨ Key Features
+## Directory Structure
 
-### 1. Device Inventory Management
-- Add, edit, delete, and search network devices
-- Multi-site device grouping
-- Device authentication credentials
-- Device type classification (Router, Switch, Firewall)
+```
+network-test-automation/
+├── backend/
+│   ├── app/
+│   │   ├── api/              # API routes
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── schemas/          # Pydantic schemas
+│   │   ├── services/         # Business logic
+│   │   ├── core/             # Security, exceptions
+│   │   ├── config.py         # Configuration
+│   │   ├── database.py       # Database setup
+│   │   └── main.py           # FastAPI app
+│   ├── requirements.txt      # Python dependencies
+│   ├── run.py                # Entry point
+│   └── .env.example          # Environment variables
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/       # Reusable components
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API services
+│   │   ├── stores/           # State management
+│   │   ├── styles/           # Global styles
+│   │   ├── App.jsx           # Root component
+│   │   └── index.jsx         # Entry point
+│   ├── package.json          # Node dependencies
+│   ├── vite.config.js        # Vite configuration
+│   └── index.html            # HTML template
+│
+├── docker-compose.yml        # Docker Compose
+├── Dockerfile.backend        # Backend Docker image
+├── Dockerfile.frontend       # Frontend Docker image
+├── README.md                 # This file
+└── .gitignore
+```
 
-### 2. SSH Automation
-- Secure SSH connections via Netmiko
-- Parallel device connectivity
-- Command execution with timeout handling
-- Output parsing and validation
-
-### 3. Comprehensive Test Suite
-- **Interface Validation**: Link status, bandwidth, errors
-- **Route Validation**: BGP/OSPF routes, route convergence
-- **Reachability Testing**: ICMP ping, traceroute
-- **DNS Validation**: DNS resolution and TTL
-- **DHCP Validation**: DHCP lease and renewal
-- **ARP Validation**: ARP cache and entries
-- **VLAN Validation**: VLAN configuration and membership
-- **BGP Neighbor Validation**: BGP adjacency and metrics
-- **OSPF Neighbor Validation**: OSPF adjacency and state
-
-### 4. Failure Simulation & Detection
-- Interface shutdown detection
-- Route failure identification
-- Packet loss detection
-- Link down alerts
-
-### 5. Advanced Reporting
-- HTML reports with charts
-- PDF generation
-- CSV export for analysis
-- Test history tracking
-- Trend analysis
-
-### 6. Real-time Dashboard
-- Total devices count
-- Healthy vs failed devices
-- Network health score
-- Success rate metrics
-- Live test execution status
-
-### 7. Monitoring & Alerting
-- Scheduled validation jobs
-- Email alerts
-- Webhook notifications
-- Alert history and analytics
-
-### 8. Security
-- JWT authentication
-- Role-based access control (RBAC)
-- Encrypted device credentials
-- Audit logging
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Python 3.12**: Core language
-- **FastAPI**: High-performance REST API framework
-- **SQLAlchemy**: ORM for database abstraction
-- **Pytest**: Testing framework
-- **Netmiko**: Multi-vendor SSH automation
-- **Nornir**: Network automation framework
-- **Paramiko**: SSH protocol library
-- **APScheduler**: Task scheduling
-- **Pydantic**: Data validation
-- **JWT**: Token-based authentication
-
-### Frontend
-- **React 18**: UI framework
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling
-- **Recharts**: Data visualization
-- **Axios**: HTTP client
-- **React Router**: Navigation
-- **Zustand**: State management
-
-### Database
-- **SQLite**: Development/Testing
-- **PostgreSQL**: Production
-
-### DevOps
-- **Docker**: Containerization
-- **Docker Compose**: Multi-container orchestration
-- **GitHub Actions**: CI/CD pipeline
-- **Linux**: Runtime environment
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Docker & Docker Compose
-- Python 3.12
+
+- Python 3.11+
 - Node.js 18+
-- Git
+- Docker & Docker Compose (optional)
+- PostgreSQL 15+ (or SQLite for development)
 
-### Development Setup
+### Backend Setup
 
 ```bash
-# Clone repository
-git clone https://github.com/suryakoduru23/network-test-automation.git
-cd network-test-automation
-
-# Start with Docker Compose
-docker-compose up -d
-
-# Backend will be available at http://localhost:8000
-# Frontend will be available at http://localhost:3000
-# API Docs at http://localhost:8000/docs
-```
-
-### Manual Setup
-
-**Backend:**
-```bash
+# Navigate to backend
 cd backend
+
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload
+
+# Create .env file
+cp .env.example .env
+
+# Run application
+python run.py
 ```
 
-**Frontend:**
+Backend API will be available at: `http://localhost:8000`
+API documentation: `http://localhost:8000/api/docs`
+
+### Frontend Setup
+
 ```bash
+# Navigate to frontend
 cd frontend
+
+# Install dependencies
 npm install
+
+# Create .env file
+cp .env.example .env
+
+# Run development server
 npm run dev
 ```
 
-## 📚 API Documentation
+Frontend will be available at: `http://localhost:3000`
 
-Full API documentation available at `/docs` (Swagger UI) after starting the backend.
-
-### Key Endpoints
-
-```
-Authentication:
-  POST   /api/v1/auth/login
-  POST   /api/v1/auth/logout
-  POST   /api/v1/auth/refresh
-
-Devices:
-  GET    /api/v1/devices
-  POST   /api/v1/devices
-  GET    /api/v1/devices/{id}
-  PUT    /api/v1/devices/{id}
-  DELETE /api/v1/devices/{id}
-
-Tests:
-  GET    /api/v1/tests
-  POST   /api/v1/tests/run
-  GET    /api/v1/tests/{id}/results
-  GET    /api/v1/tests/history
-
-Reports:
-  GET    /api/v1/reports
-  POST   /api/v1/reports/generate
-  GET    /api/v1/reports/{id}
-  GET    /api/v1/reports/{id}/export
-
-Alerts:
-  GET    /api/v1/alerts
-  GET    /api/v1/alerts/{id}
-  PUT    /api/v1/alerts/{id}
-
-Health:
-  GET    /api/v1/health
-  GET    /api/v1/health/dashboard
-```
-
-## 🔒 Security Features
-
-- ✅ JWT token-based authentication
-- ✅ Password hashing with bcrypt
-- ✅ Encrypted credential storage
-- ✅ CORS protection
-- ✅ Rate limiting
-- ✅ Input validation (Pydantic)
-- ✅ SQL injection prevention (SQLAlchemy)
-- ✅ Audit logging
-- ✅ Role-based access control
-
-## 🧪 Testing
+### Docker Setup
 
 ```bash
-# Backend tests
-cd backend
-pytest tests/ -v --cov
+# Build and start all services
+docker-compose up --build
 
-# Frontend tests
-cd frontend
-npm test
-
-# E2E tests
-npm run test:e2e
+# Services will be available at:
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8000
+# API Docs: http://localhost:8000/api/docs
 ```
 
-## 🐳 Docker Deployment
+## API Endpoints
 
-```bash
-# Start all services
-docker-compose up -d
+### Authentication
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login user
+- `POST /api/v1/auth/logout` - Logout user
 
-# View logs
-docker-compose logs -f
+### Devices
+- `GET /api/v1/devices` - List all devices
+- `POST /api/v1/devices` - Create new device
+- `GET /api/v1/devices/{id}` - Get device details
+- `PUT /api/v1/devices/{id}` - Update device
+- `DELETE /api/v1/devices/{id}` - Delete device
+- `POST /api/v1/devices/{id}/test-connectivity` - Test SSH connectivity
 
-# Stop services
-docker-compose down
-```
+### Tests
+- `POST /api/v1/tests/run` - Run test
+- `POST /api/v1/tests/run-bulk` - Run bulk tests
+- `GET /api/v1/tests/{id}` - Get test results
+- `GET /api/v1/tests/history` - Get test history
 
-## 📝 Configuration
+### Reports
+- `POST /api/v1/reports/generate` - Generate report
+- `GET /api/v1/reports` - List reports
+- `GET /api/v1/reports/{id}` - Get report
+- `GET /api/v1/reports/{id}/export` - Export report
 
-Copy `.env.example` to `.env` and configure:
+### Alerts
+- `GET /api/v1/alerts` - List alerts
+- `GET /api/v1/alerts/{id}` - Get alert
+- `PUT /api/v1/alerts/{id}` - Update alert
+
+### Health
+- `GET /api/v1/health` - Health check
+- `GET /api/v1/health/dashboard` - Dashboard metrics
+
+## Features
+
+### Test Types
+
+1. **Interface Validation** - Verify interface status (up/down)
+2. **Route Validation** - Check if route exists in routing table
+3. **DNS Validation** - Verify DNS server configuration
+4. **DHCP Validation** - Check DHCP lease status
+5. **ARP Validation** - Verify ARP entries
+6. **VLAN Validation** - Check VLAN existence
+7. **BGP Validation** - Monitor BGP neighbor status
+8. **OSPF Validation** - Monitor OSPF neighbor status
+9. **Reachability Test** - Ping test for connectivity
+
+### Device Support
+
+- Cisco IOS
+- Cisco IOS-XE
+- Cisco IOS-XR
+- Juniper Junos
+- Arista EOS
+- Linux
+
+### Report Formats
+
+- HTML (with styling)
+- PDF (with charts)
+- CSV (for spreadsheet import)
+
+## Database Models
+
+### User
+- User authentication and role management
+- Roles: Admin, Engineer, Viewer
+
+### Device
+- Network device inventory
+- SSH credentials and connectivity status
+- Site and location tracking
+
+### TestCase
+- Test definitions and configurations
+- Test type and expected results
+
+### TestRun
+- Test execution history
+- Status tracking and duration
+
+### TestResult
+- Individual test results
+- Pass/fail status and output
+
+### Report
+- Generated test reports
+- Statistics and success rates
+
+### Alert
+- Network alerts and notifications
+- Severity levels (Info, Warning, Critical)
+
+### AuditLog
+- User action tracking
+- Change history and compliance
+
+## Security Features
+
+- **JWT Authentication** - Secure token-based authentication
+- **Password Hashing** - Bcrypt password hashing
+- **CORS Protection** - Cross-origin request handling
+- **Role-based Access Control** - Fine-grained permissions
+- **Audit Logging** - Comprehensive action tracking
+- **SSH Key Support** - Alternative to password auth
+
+## Configuration
+
+Key configuration options in `.env`:
 
 ```env
-# Backend
-DATABASE_URL=sqlite:///./test.db
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-LOG_LEVEL=INFO
+# Database
+DATABASE_URL=postgresql://user:pass@localhost/ntaf_db
 
-# Frontend
-VITE_API_URL=http://localhost:8000
+# Security
+SECRET_KEY=your-secret-key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# CORS
+CORS_ORIGINS=["http://localhost:3000"]
+
+# SSH
+SSH_TIMEOUT=30
+SSH_PORT=22
+
+# Email
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
 ```
 
-## 📄 License
+## Development
 
-MIT License - See LICENSE file
+### Running Tests
 
-## 👨‍💼 Author
+```bash
+cd backend
+pytest tests/ -v --cov=app
+```
 
-**Surya Koduru**
-- GitHub: [@suryakoduru23](https://github.com/suryakoduru23)
+### Code Formatting
+
+```bash
+# Backend
+black app/
+pylint app/
+
+# Frontend
+cd frontend
+npm run format
+npm run lint
+```
+
+### Database Migrations
+
+```bash
+# Create migration
+alembic revision --autogenerate -m "Migration message"
+
+# Apply migration
+alembic upgrade head
+```
+
+## Deployment
+
+### Production Deployment
+
+```bash
+# Build Docker images
+docker-compose -f docker-compose.yml build
+
+# Start services
+docker-compose -f docker-compose.yml up -d
+```
+
+### Environment Setup
+
+1. Set secure `SECRET_KEY` in `.env`
+2. Configure PostgreSQL connection string
+3. Set appropriate CORS origins
+4. Configure SMTP for email notifications
+5. Enable HTTPS in production
+
+## Troubleshooting
+
+### Connection Issues
+
+```bash
+# Test SSH connectivity
+netmiko_show --host <device_ip> --cmd "show version"
+
+# Check API connectivity
+curl http://localhost:8000/api/v1/health
+```
+
+### Database Issues
+
+```bash
+# Initialize database
+python -c "from app.database import init_db; init_db()"
+
+# Check database connection
+psql postgresql://user:pass@localhost/ntaf_db
+```
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Support
+
+For issues and questions:
+- Create an issue on GitHub
+- Check existing documentation
+- Review API documentation at `/api/docs`
+
+## Roadmap
+
+- [ ] Scheduled test execution
+- [ ] Advanced filtering and search
+- [ ] Custom test templates
+- [ ] Email report delivery
+- [ ] Webhook integrations
+- [ ] Multi-tenancy support
+- [ ] Advanced analytics
+- [ ] Mobile app
 
 ---
 
-**Network Test Automation Framework** - Production-Grade Network Testing Platform
+**Version:** 1.0.0  
+**Last Updated:** 2024  
+**Maintainer:** Network Automation Team
